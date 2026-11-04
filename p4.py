@@ -50,7 +50,7 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 
 
 # =====================================================================
-# PERSON 1 - CommonCityNames.txt (HARDEST)
+# PERSON 1 - CommonCityNames.txt
 # =====================================================================
 # WRITE PERSON 1'S FUNCTION(S) HERE.
 # Inputs: states.txt and the zipcode dataset.
@@ -62,7 +62,7 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 
 
 # =====================================================================
-# PERSON 2 - LatLon.txt (EASIEST) + FINAL INTEGRATION
+# PERSON 2 - LatLon.txt
 # =====================================================================
 # WRITE PERSON 2'S FUNCTION(S) HERE.
 # Inputs: zips.txt and the zipcode dataset.
@@ -74,7 +74,7 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 
 
 # =====================================================================
-# PERSON 3 - CityStates.txt (MEDIUM)
+# PERSON 3 - CityStates.txt
 # =====================================================================
 # WRITE PERSON 3'S FUNCTION(S) HERE.
 # Inputs: cities.txt and the zipcode dataset.
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     '''
 
     # =================================================================
-    # FINAL INTEGRATION (PERSON 2; all members verify)
+    # FINAL INTEGRATION
     # =================================================================
     # Uncomment these calls ONLY after the corresponding functions exist.
     # generate_common_city_names()  # Person 1
