@@ -84,6 +84,39 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 # Suggested function name: generate_city_states()
 # =====================================================================
 
+def generate_city_states():
+
+    # Read requested cities from cities.txt
+    with open("cities.txt", "r") as file:
+        cities = [line.strip() for line in file if line.strip()]
+
+    # Create a dictionary to store unique states for each city
+    city_states = {city.lower(): set() for city in cities}
+
+    # Read zipcode records
+    for record in read_zipcode_data():
+
+        city = record["city"].strip().lower()
+        state = record["state"].strip()
+
+        # Add state if the city was requested
+        if city in city_states:
+            city_states[city].add(state)
+
+    # Write results to CityStates.txt
+    with open("CityStates.txt", "w") as output_file:
+
+        for city in cities:
+
+            # Sort states alphabetically using lambda
+            states = sorted(
+                city_states[city.lower()],
+                key=lambda state: state.lower()
+            )
+
+            # Write states 
+            output_file.write(" ".join(states) + "\n")
+
 
 if __name__ == "__main__":
     start_time = time.perf_counter()  # Do not remove this line
