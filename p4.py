@@ -3,137 +3,107 @@ import time
 """
 CSE 465 - Project #4
 
-GROUP MEMBERS AND RESPONSIBILITIES (fill in names before submission):
-    Person 1: [NAME] - CommonCityNames.txt
-        Read states.txt and zipcode data; find unique city names present
-        in EVERY listed state; sort names and output one per line.
-        Bonus responsibility: use filter() where it makes sense.
+Group members and responsibilities:
 
-    Person 2: [NAME] - LatLon.txt + integration/testing
-        Read zips.txt and zipcode data; output latitude and longitude
-        for each requested ZIP in input order; use the FIRST matching
-        record for duplicate ZIP codes. Integrate and test all sections.
-        Bonus responsibility: use yield for streaming zipcode records.
+    Harsha Paladugu - CommonCityNames.txt
+        Wrote generate_common_city_names(): reads states.txt, collects the
+        city names for each of those states, and writes the names found in
+        every state (sorted, no duplicates, one per line). Used filter() for
+        the bonus. Also matched the shared reader to the real zipcodes.txt
+        layout (tab separated, header row), put the three parts together
+        in main, and tested the outputs.
 
-    Person 3: [NAME] - CityStates.txt
-        Read cities.txt and zipcode data; find unique states for each
-        requested city; sort state names and output one line per city.
-        Bonus responsibility: use lambda where it makes sense.
+    Evan Bailey - LatLon.txt and the shared zipcode reader
+        Wrote read_zipcodes(), the generator all three parts use to go
+        through zipcodes.txt (yield bonus), and generate_lat_lon(): reads
+        zips.txt and writes the latitude and longitude of each zip code,
+        using the first entry when a zip code shows up more than once.
 
-All members: test edge cases, use comprehensions when appropriate,
-avoid unnecessary repeated scans, and explain your own code.
-
-IMPORTANT:
-    - Keep the provided runtime-measurement lines in __main__.
-    - Put helper functions above __main__; put function CALLS inside it.
-    - Coordinate the exact format of the zipcode data before coding.
-    - Update the bonus line-number comments below AFTER final edits.
-    - Submit the finished file as p4.py (not p4_group_template.py).
+    My'Annia Lewis - CityStates.txt
+        Wrote generate_city_states(): reads cities.txt and writes, for each
+        city, the states that have a city with that name (sorted, each
+        state listed once). Used lambda for the bonus.
 """
 
 """
-BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
-1- => Lambda was used in line/s: ............
-2- => Filter or map was used in line/s: ............
-3- => yield was used in line/s: ............
+1- => Lambda was used in line/s: 59, 105
+2- => Filter or map was used in line/s: 59
+3- => yield was used in line/s: 47
 """
 
 
-# =====================================================================
-# SHARED HELPER AREA (PERSON 2 coordinates with Persons 1 and 3)
-# =====================================================================
-# Write reusable zipcode-reading helpers HERE, above the task functions.
-# If implementing the yield bonus, define the generator here.
-# Decide whether each task should call the generator separately or share
-# a preprocessed lookup. Do not consume a generator and expect to reuse it.
-# =====================================================================
 ZIP_FILE = "zipcodes.txt"
 
+
+# Goes through zipcodes.txt one record at a time instead of loading the
+# whole file. Each record is a list of the tab separated columns:
+# 1 = zip code, 3 = city, 4 = state, 6 = latitude, 7 = longitude
 def read_zipcodes():
     with open(ZIP_FILE) as f:
-        parts = line.strip().split(",")
-        if len(parts) >= 5:
-            yield parts
+        next(f, None)  # first line is the column names
+        for line in f:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 8:
+                yield parts
 
 
-# =====================================================================
-# PERSON 1 - CommonCityNames.txt
-# =====================================================================
-# WRITE PERSON 1'S FUNCTION(S) HERE.
-# Inputs: states.txt and the zipcode dataset.
-# Output: CommonCityNames.txt, sorted unique city names appearing in ALL
-#         requested states, one name per line.
-# Bonus: filter() if it improves clarity.
-# Suggested function name: generate_common_city_names()
-# =====================================================================
+# CommonCityNames.txt: city names that show up in every state in states.txt
+def generate_common_city_names():
+    with open("states.txt") as f:
+        states = {line.strip().upper() for line in f if line.strip()}
+
+    # each state gets its own set of city names
+    cities_by_state = {state: set() for state in states}
+
+    # only look at records from the states we were asked about
+    for parts in filter(lambda p: p[4] in states, read_zipcodes()):
+        cities_by_state[parts[4]].add(parts[3])
+
+    # a city only counts if every state has it
+    common = set.intersection(*cities_by_state.values()) if states else set()
+
+    with open("CommonCityNames.txt", "w") as out:
+        out.writelines([city + "\n" for city in sorted(common)])
 
 
-# =====================================================================
-# PERSON 2 - LatLon.txt
-# =====================================================================
-# WRITE PERSON 2'S FUNCTION(S) HERE.
-# Inputs: zips.txt and the zipcode dataset.
-# Output: LatLon.txt; one latitude/longitude pair per input ZIP, with a
-#         space between values; use the first zipcode record on duplicates.
-# Bonus: yield in the shared zipcode reader above.
-# Suggested function name: generate_lat_lon()
-# =====================================================================
+# LatLon.txt: latitude and longitude for each zip code in zips.txt
 def generate_lat_lon():
     with open("zips.txt") as f:
         zips = [line.strip() for line in f]
 
+    # keep only the first entry we see for each zip code
     lookup = {}
     for parts in read_zipcodes():
-        if parts[0] not in lookup:
-            lookup[parts[0]] = parts[3] + " " + parts[4]
-    
+        if parts[1] not in lookup:
+            lookup[parts[1]] = parts[6] + " " + parts[7]
+
     with open("LatLon.txt", "w") as out:
         for z in zips:
             out.write(lookup.get(z, "") + "\n")
 
 
-# =====================================================================
-# PERSON 3 - CityStates.txt
-# =====================================================================
-# WRITE PERSON 3'S FUNCTION(S) HERE.
-# Inputs: cities.txt and the zipcode dataset.
-# Output: CityStates.txt; one line per input city, with sorted, distinct
-#         state names separated by spaces.
-# Bonus: lambda in a useful key or transformation.
-# Suggested function name: generate_city_states()
-# =====================================================================
-
+# CityStates.txt: the states that contain each city in cities.txt
 def generate_city_states():
-
-    # Read requested cities from cities.txt
     with open("cities.txt", "r") as file:
         cities = [line.strip() for line in file if line.strip()]
 
-    # Create a dictionary to store unique states for each city
+    # lowercase the names so "Oxford" matches "OXFORD" in the data
     city_states = {city.lower(): set() for city in cities}
 
-    # Read zipcode records
-    for record in read_zipcode_data():
+    for record in read_zipcodes():
+        city = record[3].strip().lower()
+        state = record[4].strip()
 
-        city = record["city"].strip().lower()
-        state = record["state"].strip()
-
-        # Add state if the city was requested
         if city in city_states:
             city_states[city].add(state)
 
-    # Write results to CityStates.txt
     with open("CityStates.txt", "w") as output_file:
-
         for city in cities:
-
-            # Sort states alphabetically using lambda
+            # states in alphabetical order
             states = sorted(
                 city_states[city.lower()],
                 key=lambda state: state.lower()
             )
-
-            # Write states 
             output_file.write(" ".join(states) + "\n")
 
 
@@ -144,14 +114,9 @@ if __name__ == "__main__":
     -----------------------------------------------------------
     '''
 
-    # =================================================================
-    # FINAL INTEGRATION
-    # =================================================================
-    # Uncomment these calls ONLY after the corresponding functions exist.
-    # generate_common_city_names()  # Person 1
-    # generate_lat_lon()            # Person 2
-    # generate_city_states()        # Person 3
-    # =================================================================
+    generate_common_city_names()
+    generate_lat_lon()
+    generate_city_states()
 
     '''
     Inside the __main__, do not add any codes after this line.
