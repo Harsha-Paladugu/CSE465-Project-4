@@ -47,6 +47,13 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 # Decide whether each task should call the generator separately or share
 # a preprocessed lookup. Do not consume a generator and expect to reuse it.
 # =====================================================================
+ZIP_FILE = "zipcodes.txt"
+
+def read_zipcodes():
+    with open(ZIP_FILE) as f:
+        parts = line.strip().split(",")
+        if len(parts) >= 5:
+            yield parts
 
 
 # =====================================================================
@@ -71,6 +78,18 @@ BONUS FEATURE LOCATIONS - replace dots with actual line numbers:
 # Bonus: yield in the shared zipcode reader above.
 # Suggested function name: generate_lat_lon()
 # =====================================================================
+def generate_lat_lon():
+    with open("zips.txt") as f:
+        zips = [line.strip() for line in f]
+
+    lookup = {}
+    for parts in read_zipcodes():
+        if parts[0] not in lookup:
+            lookup[parts[0]] = parts[3] + " " + parts[4]
+    
+    with open("LatLon.txt", "w") as out:
+        for z in zips:
+            out.write(lookup.get(z, "") + "\n")
 
 
 # =====================================================================
